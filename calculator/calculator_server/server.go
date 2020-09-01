@@ -12,6 +12,27 @@ import (
 
 type server struct{}
 
+func (s *server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
+	var curMax int64
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		curNum := req.GetNumber()
+		if curNum > curMax {
+			curMax = curNum
+			if err := stream.Send(&calculatorpb.FindMaximumResponse{MaxNumber: curMax}); err != nil {
+				return err
+			}
+		}
+	}
+}
+
 func (s *server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
 	var nums []int64
 	for {
