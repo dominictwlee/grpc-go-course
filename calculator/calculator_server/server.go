@@ -11,6 +11,24 @@ import (
 
 type server struct{}
 
+func (s *server) DecomposePrimeNumber(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_DecomposePrimeNumberServer) error {
+	k := int64(2)
+	n := req.GetNumber()
+	for n > 1 {
+		if n%k == 0 {
+			res := &calculatorpb.PrimeNumberDecompositionResponse{Result: k}
+			if err := stream.Send(res); err != nil {
+				return err
+			}
+			n = n / k
+		} else {
+			k++
+		}
+
+	}
+	return nil
+}
+
 func (s *server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	fmt.Println("Sum function was invoked")
 	sum := req.GetNum_1() + req.GetNum_2()
@@ -27,7 +45,7 @@ func main() {
 
 	s := grpc.NewServer()
 
-	calculatorpb.RegisterSumServiceServer(s, &server{})
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
 
 	fmt.Printf("Server started at %s\n", address)
 
