@@ -29,7 +29,6 @@ func (s *server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 		firstName := req.GetGreeting().GetFirstName()
 		result += fmt.Sprintf("Hello %s ! ", firstName)
 	}
-
 }
 
 func (s *server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) error {

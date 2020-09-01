@@ -5,11 +5,31 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"grpc-go-course/calculator/calculatorpb"
+	"io"
 	"log"
 	"net"
 )
 
 type server struct{}
+
+func (s *server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	var nums []int64
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			var sum int64
+			for _, n := range nums {
+				sum += n
+			}
+			mean := float64(sum) / float64(len(nums))
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{Mean: mean})
+		}
+		if err != nil {
+			log.Fatalf("Failed to read client stream %v", err)
+		}
+		nums = append(nums, req.GetNumber())
+	}
+}
 
 func (s *server) DecomposePrimeNumber(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_DecomposePrimeNumberServer) error {
 	k := int64(2)
