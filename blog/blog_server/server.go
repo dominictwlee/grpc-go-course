@@ -3,9 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"grpc-go-course/blog/blogpb"
+	"grpc-go-course/blog/models"
 	"grpc-go-course/db"
 	"log"
 	"net"
@@ -13,7 +18,33 @@ import (
 	"os/signal"
 )
 
+var collection *mongo.Collection
+
 type server struct{}
+
+func (s *server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
+	blog := req.GetBlog()
+	data := models.BlogItem{
+		AuthorID: blog.GetAuthorId(),
+		Content:  blog.GetContent(),
+		Title:    blog.GetTitle(),
+	}
+	res, err := collection.InsertOne(context.Background(), data)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Internal error: %v", err))
+	}
+	oid, ok := res.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Cannot convert to OID", err))
+	}
+
+	return &blogpb.CreateBlogResponse{Blog: &blogpb.Blog{
+		Id:       oid.Hex(),
+		AuthorId: blog.GetAuthorId(),
+		Title:    blog.GetTitle(),
+		Content:  blog.GetContent(),
+	}}, nil
+}
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -24,7 +55,7 @@ func main() {
 		log.Fatalf("Failed to connect to mongoDB %v", err)
 	}
 
-	client.Database("mydb").Collection("blog")
+	collection = client.Database("mydb").Collection("blog")
 
 	listen, err := net.Listen("tcp", address)
 	if err != nil {
@@ -32,7 +63,7 @@ func main() {
 	}
 
 	opts := []grpc.ServerOption{}
-	tls := false
+	tls := true
 	if tls {
 		certFile := "ssl/server.crt"
 		keyFile := "ssl/server.pem"
