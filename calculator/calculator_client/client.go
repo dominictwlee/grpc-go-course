@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"grpc-go-course/calculator/calculatorpb"
 	"io"
 	"log"
@@ -22,8 +24,33 @@ func main() {
 	//doUnary(c)
 	//doServerStream(c)
 	//doClientStream(c)
-	doBiDiStream(c)
+	//doBiDiStream(c)
+	doErrorUnary(c)
 }
+
+func doErrorUnary(c calculatorpb.CalculatorServiceClient) {
+	doErrorCall(c, 10)
+	doErrorCall(c, -20)
+}
+
+func doErrorCall(c calculatorpb.CalculatorServiceClient, n int32) {
+	req := &calculatorpb.SquareRootRequest{Number: n}
+	res, err := c.SquareRoot(context.Background(), req)
+	if err != nil {
+		resErr, ok := status.FromError(err)
+		if ok {
+			// error from gRPC
+			if resErr.Code() == codes.InvalidArgument {
+				fmt.Println(resErr.Message())
+			}
+		} else {
+			log.Fatalf("Error calling SquareRoot: %v", resErr)
+		}
+		return
+	}
+	fmt.Println("SquareRoot: ", res.GetResult())
+}
+
 func doUnary(c calculatorpb.CalculatorServiceClient) {
 	req := &calculatorpb.SumRequest{
 		Num_1: 3,
