@@ -108,6 +108,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
+	//credentials.NewServerTLSFromFile()
 	s := grpc.NewServer()
 
 	greetpb.RegisterGreetServiceServer(s, &server{})
