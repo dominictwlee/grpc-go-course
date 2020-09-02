@@ -29,7 +29,19 @@ func main() {
 	defer cc.Close()
 
 	c := blogpb.NewBlogServiceClient(cc)
+	readBlog(c)
+}
 
+func readBlog(c blogpb.BlogServiceClient) {
+	fmt.Println("Getting blog")
+	readRes, err := c.ReadBlog(context.Background(), &blogpb.ReadBlogRequest{BlogId: "5f50030183dcd90c273af889"})
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
+	fmt.Printf("Blog received %v\n", readRes)
+}
+
+func createBlog(c blogpb.BlogServiceClient) {
 	fmt.Println("Creating blog")
 	blog := &blogpb.Blog{
 		AuthorId: "Jane",
@@ -41,5 +53,4 @@ func main() {
 		log.Fatalf("Unexpected error: %v", err)
 	}
 	fmt.Printf("Blog has been created %v\n", createRes)
-
 }

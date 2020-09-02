@@ -22,6 +22,29 @@ var collection *mongo.Collection
 
 type server struct{}
 
+func (s *server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
+	blogId := req.GetBlogId()
+	oid, err := primitive.ObjectIDFromHex(blogId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Cannot parse ID")
+	}
+	item := models.BlogItem{
+		ID: oid,
+	}
+	_, err = item.ById(collection)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("Cannot find blog with specified ID %v", err))
+	}
+	return &blogpb.ReadBlogResponse{
+		Blog: &blogpb.Blog{
+			Id:       item.ID.Hex(),
+			AuthorId: item.AuthorID,
+			Title:    item.Title,
+			Content:  item.Content,
+		},
+	}, nil
+}
+
 func (s *server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
 	blog := req.GetBlog()
 	item := models.BlogItem{
