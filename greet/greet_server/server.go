@@ -22,7 +22,7 @@ func (s *server) GreetWithDeadline(ctx context.Context, req *greetpb.GreetWithDe
 	for i := 0; i < 3; i++ {
 		if ctx.Err() == context.Canceled {
 			fmt.Println("Client canceled the request!")
-			return nil,status.Error(codes.DeadlineExceeded, "The client canceled the request")
+			return nil, status.Error(codes.DeadlineExceeded, "The client canceled the request")
 		}
 		time.Sleep(1 * time.Second)
 	}
