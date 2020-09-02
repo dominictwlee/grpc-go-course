@@ -15,7 +15,7 @@ import (
 
 func main() {
 	certFile := "ssl/ca.crt"
-	tls := false
+	tls := true
 	opts := grpc.WithInsecure()
 	if tls {
 		creds, err := credentials.NewClientTLSFromFile(certFile, "")
