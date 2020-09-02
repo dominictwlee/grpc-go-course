@@ -32,14 +32,14 @@ func main() {
 
 	fmt.Println("Creating blog")
 	blog := &blogpb.Blog{
-		AuthorId: "Dom",
-		Title:    "My First Blog",
-		Content:  "Content of first blog",
+		AuthorId: "Jane",
+		Title:    "My 2nd Blog",
+		Content:  "Content of 2nd blog",
 	}
 	createRes, err := c.CreateBlog(context.Background(), &blogpb.CreateBlogRequest{Blog: blog})
 	if err != nil {
 		log.Fatalf("Unexpected error: %v", err)
 	}
-	fmt.Printf("Blog has been created %v", createRes)
+	fmt.Printf("Blog has been created %v\n", createRes)
 
 }

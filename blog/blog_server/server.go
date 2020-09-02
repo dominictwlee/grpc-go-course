@@ -24,12 +24,13 @@ type server struct{}
 
 func (s *server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
 	blog := req.GetBlog()
-	data := models.BlogItem{
+	item := models.BlogItem{
 		AuthorID: blog.GetAuthorId(),
 		Content:  blog.GetContent(),
 		Title:    blog.GetTitle(),
 	}
-	res, err := collection.InsertOne(context.Background(), data)
+
+	res, err := item.Create(collection)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Internal error: %v", err))
 	}
