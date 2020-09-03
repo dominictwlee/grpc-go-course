@@ -8,6 +8,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func ListAll(coll *mongo.Collection) ([]BlogItem, error) {
+	opts := options.Find().SetSort(bson.D{{"author_id", 1}})
+	cursor, err := coll.Find(context.Background(), bson.D{}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []BlogItem
+	if err = cursor.All(context.Background(), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 func (item *BlogItem) Update(coll *mongo.Collection) (*BlogItem, error) {
 	opts := options.FindOneAndReplace().SetUpsert(false)
 	filter := bson.M{"_id": item.ID}

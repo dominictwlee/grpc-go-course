@@ -22,6 +22,21 @@ var collection *mongo.Collection
 
 type server struct{}
 
+func (s *server) ListBlogs(req *blogpb.ListBlogsRequest, stream blogpb.BlogService_ListBlogsServer) error {
+	blogs, err := models.ListAll(collection)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Failed to list blogs %v", err)
+	}
+
+	for _, b := range blogs {
+		if err := stream.Send(&blogpb.ListBlogsResponse{Blog: mapDataToBlogpb(b)}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
 	id := req.GetBlogId()
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -30,7 +45,7 @@ func (s *server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) 
 	}
 
 	item := models.BlogItem{
-		ID:       oid,
+		ID: oid,
 	}
 
 	res, err := item.Delete(collection)

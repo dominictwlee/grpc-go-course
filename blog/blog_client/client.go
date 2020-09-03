@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"grpc-go-course/blog/blogpb"
+	"io"
 	"log"
 )
 
@@ -29,9 +30,29 @@ func main() {
 	defer cc.Close()
 
 	c := blogpb.NewBlogServiceClient(cc)
+	listBlogs(c)
+	//createBlog(c)
 	//readBlog(c)
 	//updateBlog(c)
-	deleteBlog(c)
+	//deleteBlog(c)
+}
+
+func listBlogs(c blogpb.BlogServiceClient) {
+	stream, err := c.ListBlogs(context.Background(), &blogpb.ListBlogsRequest{})
+	if err != nil {
+		log.Fatalf("Failed to list blogs %v\n", err)
+	}
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Failed to receive stream from server %v\n", err)
+		}
+		fmt.Println("Blog received: ", res.GetBlog())
+	}
 }
 
 func deleteBlog(c blogpb.BlogServiceClient) {
