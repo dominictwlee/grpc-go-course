@@ -13,14 +13,23 @@ func (item *BlogItem) Update(coll *mongo.Collection) (*BlogItem, error) {
 	filter := bson.M{"_id": item.ID}
 	res := coll.FindOneAndReplace(context.Background(), filter, item, opts)
 	if res.Err() != nil {
-		return nil,res.Err()
+		return nil, res.Err()
 	}
 
-	return item,nil
+	return item, nil
 }
 
 func (item *BlogItem) Create(coll *mongo.Collection) (*mongo.InsertOneResult, error) {
 	return coll.InsertOne(context.Background(), item)
+}
+func (item *BlogItem) Delete(coll *mongo.Collection) (*mongo.DeleteResult, error) {
+	filter := bson.D{{"_id", item.ID}}
+	res, err := coll.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+
 }
 
 func (item *BlogItem) ById(coll *mongo.Collection) (*mongo.SingleResult, error) {

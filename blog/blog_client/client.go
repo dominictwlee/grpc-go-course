@@ -30,7 +30,16 @@ func main() {
 
 	c := blogpb.NewBlogServiceClient(cc)
 	//readBlog(c)
-	updateBlog(c)
+	//updateBlog(c)
+	deleteBlog(c)
+}
+
+func deleteBlog(c blogpb.BlogServiceClient) {
+	res, err := c.DeleteBlog(context.Background(), &blogpb.DeleteBlogRequest{BlogId: "5f500998f9dee1a1841685fb"})
+	if err != nil {
+		log.Fatalf("Failed to delete blog %v\n", err)
+	}
+	fmt.Printf("Blog deleted %v", res)
 }
 
 func updateBlog(c blogpb.BlogServiceClient) {

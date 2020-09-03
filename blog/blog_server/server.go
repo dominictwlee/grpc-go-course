@@ -22,6 +22,25 @@ var collection *mongo.Collection
 
 type server struct{}
 
+func (s *server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
+	id := req.GetBlogId()
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Cannot parse ID")
+	}
+
+	item := models.BlogItem{
+		ID:       oid,
+	}
+
+	res, err := item.Delete(collection)
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("Failed to delete blog %v", err))
+	}
+	fmt.Printf("Deleted %v blog(s)", res.DeletedCount)
+	return &blogpb.DeleteBlogResponse{Blog: mapDataToBlogpb(item)}, nil
+}
+
 func (s *server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
 	blog := req.GetBlog()
 	id := blog.GetId()
@@ -31,7 +50,7 @@ func (s *server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) 
 	}
 
 	item := models.BlogItem{
-		ID: oid,
+		ID:       oid,
 		AuthorID: blog.GetAuthorId(),
 		Content:  blog.GetContent(),
 		Title:    blog.GetTitle(),
