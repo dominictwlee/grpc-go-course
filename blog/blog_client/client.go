@@ -29,7 +29,22 @@ func main() {
 	defer cc.Close()
 
 	c := blogpb.NewBlogServiceClient(cc)
-	readBlog(c)
+	//readBlog(c)
+	updateBlog(c)
+}
+
+func updateBlog(c blogpb.BlogServiceClient) {
+	fmt.Println("Getting blog")
+	readRes, err := c.UpdateBlog(context.Background(), &blogpb.UpdateBlogRequest{Blog: &blogpb.Blog{
+		Id:       "5f500998f9dee1a1841685fb",
+		AuthorId: "Cool Again",
+		Title:    "Again",
+		Content:  "Hello Cool Guy",
+	}})
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
+	fmt.Printf("Blog received %v\n", readRes)
 }
 
 func readBlog(c blogpb.BlogServiceClient) {

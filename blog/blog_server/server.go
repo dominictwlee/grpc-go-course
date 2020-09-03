@@ -22,26 +22,47 @@ var collection *mongo.Collection
 
 type server struct{}
 
+func (s *server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
+	blog := req.GetBlog()
+	id := blog.GetId()
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Cannot parse ID")
+	}
+
+	item := models.BlogItem{
+		ID: oid,
+		AuthorID: blog.GetAuthorId(),
+		Content:  blog.GetContent(),
+		Title:    blog.GetTitle(),
+	}
+
+	data, err := item.Update(collection)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Cannot find blog with specified ID %v", err))
+		}
+		return nil, status.Error(codes.Internal, fmt.Sprintf("Unexpected Error %v", err))
+	}
+	return &blogpb.UpdateBlogResponse{Blog: mapDataToBlogpb(*data)}, nil
+}
+
 func (s *server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
 	blogId := req.GetBlogId()
 	oid, err := primitive.ObjectIDFromHex(blogId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Cannot parse ID")
 	}
-	item := models.BlogItem{
+	data := models.BlogItem{
 		ID: oid,
 	}
-	_, err = item.ById(collection)
+	_, err = data.ById(collection)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("Cannot find blog with specified ID %v", err))
 	}
 	return &blogpb.ReadBlogResponse{
-		Blog: &blogpb.Blog{
-			Id:       item.ID.Hex(),
-			AuthorId: item.AuthorID,
-			Title:    item.Title,
-			Content:  item.Content,
-		},
+		Blog: mapDataToBlogpb(data),
 	}, nil
 }
 
@@ -68,6 +89,15 @@ func (s *server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) 
 		Title:    blog.GetTitle(),
 		Content:  blog.GetContent(),
 	}}, nil
+}
+
+func mapDataToBlogpb(data models.BlogItem) *blogpb.Blog {
+	return &blogpb.Blog{
+		Id:       data.ID.Hex(),
+		AuthorId: data.AuthorID,
+		Title:    data.Title,
+		Content:  data.Content,
+	}
 }
 
 func main() {
